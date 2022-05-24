@@ -9,6 +9,7 @@ namespace minesweeper2 {
         protected Texture2D _texture;
         private Texture2D _coverTexture;
         protected Vector2 _position;
+        private Color _coverColor;
         private bool _isClicked;
         private bool _flagged;
 
@@ -16,6 +17,7 @@ namespace minesweeper2 {
         {
             _coverTexture = game.Content.Load<Texture2D>(coverTextureName);
             _texture = game.Content.Load<Texture2D>(textureName);
+            _coverColor = Color.Gray;
             _position = position;
             _isClicked = false;
             _flagged = false;
@@ -60,7 +62,8 @@ namespace minesweeper2 {
         public Texture2D Texture { get => _texture; set => _texture=value; }
         public Texture2D CoverTexture { get => _coverTexture; set => _coverTexture=value; }
         public Vector2 Position { get => _position; set => _position=value; }
-        public bool Flagged { get => _flagged; set => _flagged=value; }
-        public bool IsClicked { get => _isClicked; set => _isClicked=value; }
+        public bool Flagged { get => _flagged;}
+        public bool IsClicked { get => _isClicked;}
+        public Color CoverColor { get => _coverColor; set => _coverColor=value; }
     }
 }

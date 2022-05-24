@@ -13,6 +13,7 @@ namespace minesweeper2 {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private int _screenWidth, _screenHeight, _screenCenterY, _screenCenterX;
+        private bool firstClick = true;
         Random rand = new Random();
 
         private const int GAME_WIDTH = 1400;
@@ -22,6 +23,7 @@ namespace minesweeper2 {
         private const int NUM_COINS = 5;
         private const int BOARD_SIZE_WIDTH = 15;
         private const int BOARD_SIZE_HEIGHT = 15;
+        private MouseState previousMS;
         //+2 för att ha en border runt banan,  gör det lättare kolla antalet bomber
         private Cell[,] cells = new Cell[BOARD_SIZE_HEIGHT + 2, BOARD_SIZE_WIDTH + 2];
         public Game1()
@@ -97,6 +99,7 @@ namespace minesweeper2 {
             //beräkna avståndet till närmsta coin för att ge cellen en korrekt bakgrundsfärg
             cells = distanceToCoin(cells);
              
+            //
         }
 
         protected override void Update(GameTime gameTime)
@@ -123,12 +126,18 @@ namespace minesweeper2 {
                         ms.Position.X > cells[i, j].Position.X &&
                         ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
                         ms.Position.Y > cells[i, j].Position.Y) {
-                        if (ms.LeftButton == ButtonState.Pressed) {
-                            cells[i, j].IsClicked = true;
+                        if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                            if (cells[i, j].click() && cells[i, j] is Grenade || (((NormalCell)cells[i, j]).NearbyGrenades != 0) && firstClick == true) {
+                                firstClick = false;
+                                clearSpaceFirstClick(cells, i, j);
+                            }
                         }
+                        
                     }
                 }
             }
+            previousMS = ms;
+
 
                     base.Update(gameTime);
         }
@@ -155,7 +164,7 @@ namespace minesweeper2 {
                     //Bomb
                     else if (cells[i, j] is Grenade) {
                         if (!cells[i, j].IsClicked) {
-                            _spriteBatch.Draw(cells[i, j].CoverTexture, cells[i, j].getRetangle(), Color.Gray);
+                            _spriteBatch.Draw(cells[i, j].CoverTexture, cells[i, j].getRetangle(), cells[i, j].CoverColor);
                         }
                         else {
                             _spriteBatch.Draw(cells[i, j].Texture, cells[i, j].getRetangle(), Color.White);
@@ -290,6 +299,15 @@ namespace minesweeper2 {
                             }
                         }
                     }
+                }
+            }
+            return cells;
+        }
+        private Cell[,] clearSpaceFirstClick(Cell[,] cells, int x, int y)
+        {
+            for (int i = x-1; i < x+1; i++) {
+                for (int j = y-1; j < y+1; j++) {
+
                 }
             }
             return cells;

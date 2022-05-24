@@ -16,6 +16,7 @@ namespace minesweeper2 {
         {
             _color = Color.White;
             _coinDistance = 0;
+            _nearbyGrenades = 0;
         }
         /*public void setNumber(int num, Game game)
         {
