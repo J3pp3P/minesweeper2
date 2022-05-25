@@ -94,10 +94,10 @@ namespace minesweeper2 {
             cells = shuffle(cells);
 
             //Beräkna antalet bomber runt alla NormalCeller
-            cells = countNearbyBombs(cells);
+            
 
             //beräkna avståndet till närmsta coin för att ge cellen en korrekt bakgrundsfärg
-            cells = distanceToCoin(cells);
+            
              
             //
         }
@@ -127,10 +127,18 @@ namespace minesweeper2 {
                         ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
                         ms.Position.Y > cells[i, j].Position.Y) {
                         if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
-                            if (cells[i, j].click() && cells[i, j] is Grenade || (((NormalCell)cells[i, j]).NearbyGrenades != 0) && firstClick == true) {
-                                firstClick = false;
-                                clearSpaceFirstClick(cells, i, j);
+                            if (cells[i, j].click()) {
+
+                                if (firstClick) {
+                                    firstClick = false;
+                                    cells = distanceToCoin(cells);
+                                    cells = countNearbyBombs(cells);
+                                    if (((NormalCell)cells[i, j]).NearbyGrenades != 0) {
+                                        cells = clearSpaceFirstClick(cells, i, j);
+                                    }
+                                }
                             }
+                            
                         }
                         
                     }
@@ -305,9 +313,29 @@ namespace minesweeper2 {
         }
         private Cell[,] clearSpaceFirstClick(Cell[,] cells, int x, int y)
         {
+            Cell temp;
+            Vector2 tempPosition;
+            bool reroll = true;
             for (int i = x-1; i < x+1; i++) {
                 for (int j = y-1; j < y+1; j++) {
-
+                    if (cells[i, j] is Grenade) {
+                        int newX = rand.Next(1, cells.GetLength(0)-1);
+                        int newY = rand.Next(1, cells.GetLength(1)-1);
+                        while (reroll) {
+                            if (newX >= x-1 && newX <= x+1 && newY >= y-1 && newY >= y+1) {
+                                reroll = true;
+                            }
+                            else {
+                                reroll = false;
+                            }
+                        }
+                        tempPosition = cells[i, j].Position;
+                        cells[i, j].Position = cells[x, y].Position;
+                        cells[x, y].Position = tempPosition;
+                        temp = cells[i, j];
+                        cells[i, j] = cells[x, y];
+                        cells[x, y] = temp;
+                    }
                 }
             }
             return cells;
