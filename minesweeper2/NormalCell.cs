@@ -12,7 +12,8 @@ namespace minesweeper2 {
         private int _coinDistance;
 
 
-        public NormalCell(Game game, Vector2 position, string textureName, string coverTextureName) : base(game, position, textureName, coverTextureName)
+        public NormalCell(Game game, Vector2 position, string textureName, string coverTextureName, string flagTextureName)
+                        : base(game, position, textureName, coverTextureName, flagTextureName)
         {
             _color = Color.White;
             _coinDistance = 0;

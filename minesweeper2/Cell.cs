@@ -6,17 +6,19 @@ using System.Text;
 
 namespace minesweeper2 {
     class Cell {
-        protected Texture2D _texture;
+        private Texture2D _texture;
         private Texture2D _coverTexture;
+        private Texture2D _flagTexture;
         protected Vector2 _position;
         private Color _coverColor;
         private bool _isClicked;
         private bool _flagged;
 
-        public Cell(Game game, Vector2 position, string textureName, string coverTextureName)
+        public Cell(Game game, Vector2 position, string textureName, string coverTextureName, string flagTextureName)
         {
-            _coverTexture = game.Content.Load<Texture2D>(coverTextureName);
             _texture = game.Content.Load<Texture2D>(textureName);
+            _flagTexture = game.Content.Load<Texture2D>(flagTextureName);
+            _coverTexture = game.Content.Load<Texture2D>(coverTextureName);
             _coverColor = Color.Gray;
             _position = position;
             _isClicked = false;
@@ -29,12 +31,12 @@ namespace minesweeper2 {
          */
         public virtual bool click()
         {
-            if (!_isClicked || !_flagged) {
-                _isClicked = true;
-                return true;
+            if (_isClicked || _flagged) {
+                return false;
             }
             else {
-                return false;
+                _isClicked = true;
+                return true;
             }
         }
         /*
@@ -45,7 +47,7 @@ namespace minesweeper2 {
          */
         public bool flag()
         {
-            if (!_isClicked) {
+            if (_isClicked) {
                 return false;
             }
             else {
@@ -60,6 +62,7 @@ namespace minesweeper2 {
             return new Rectangle((int)_position.X, (int)_position.Y, _texture.Width, _texture.Height);
         }
         public Texture2D Texture { get => _texture; set => _texture=value; }
+        public Texture2D FlagTexture { get => _flagTexture; set => _flagTexture=value; }
         public Texture2D CoverTexture { get => _coverTexture; set => _coverTexture=value; }
         public Vector2 Position { get => _position; set => _position=value; }
         public bool Flagged { get => _flagged;}

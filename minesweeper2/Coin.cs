@@ -6,7 +6,8 @@ using System.Text;
 namespace minesweeper2 {
 
     class Coin : NormalCell {
-        public Coin(Game game, Vector2 position, string textureName, string coverTextureName) : base(game, position, textureName, coverTextureName)
+        public Coin(Game game, Vector2 position, string textureName, string coverTextureName, string flagTextureName)
+                : base(game, position, textureName, coverTextureName, flagTextureName)
         {
             _color = Color.Gold;
         }
