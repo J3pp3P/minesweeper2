@@ -13,14 +13,19 @@ namespace minesweeper2 {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private int _screenWidth, _screenHeight, _screenCenterY, _screenCenterX;
-        private bool firstClick = true;
+        private bool _firstClick = true;
+        private int _foundCoins = 0;
+        private bool _running = false;
+        private bool _started = false;
+        private bool _paused = false;
         Random rand = new Random();
+        Stopwatch _gameTimer = new Stopwatch();
 
         private const int GAME_WIDTH = 1400;
         private const int GAME_HEIGHT = 900;
         private const int CELL_SIZE = 48;
-        private const int NUM_GRENADES = 40;
-        private const int NUM_COINS = 5;
+        private const int NUM_GRENADES = 50;
+        private const int NUM_COINS = 15;
         private const int BOARD_SIZE_WIDTH = 16;
         private const int BOARD_SIZE_HEIGHT = 16;
         private MouseState previousMS;
@@ -106,36 +111,60 @@ namespace minesweeper2 {
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+            KeyboardElite.GetState();
 
             /* TODO: click()
-             * TODO: flag()
-             * TODO: revealMultipleCells()
+             * flag()
+             * revealMultipleCells()
              * TODO: om det är en bomb, lägg till eventull animation och att spelaren förlorar
              * TODO: om det är ett coin, lägg till eentuell animation och att spelaren vinner om alla coins är hittade
              * TODO: tidtagning
              * TODO: skicka tiden Till servern i formatet string
              * TODO: håll ordning på antalet bomber och coins kvar
              */
+            //start logik
+            if (KeyboardElite.HasBeenPressed(Keys.Space) && !_started) {
+                _started = true;
+                _running = true;
+                _gameTimer.Start();
+            }
+            //pause logik
+            else if (KeyboardElite.HasBeenPressed(Keys.Space)) {
+                if (!_paused) {
+                    _gameTimer.Stop();
+                }
+                else {
+                    _gameTimer.Start();
+                }
 
+                _paused = !_paused;
+                _running = !_running;
+            }
+            if (_running) {
 
-            MouseState ms = Mouse.GetState();
+                MouseState ms = Mouse.GetState();
 
-            for (int i = 1; i < cells.GetLength(0)-1; i++) {
-                for (int j = 1; j < cells.GetLength(1)-1; j++) {
-                    if (ms.Position.X < cells[i, j].Position.X + CELL_SIZE && 
-                        ms.Position.X > cells[i, j].Position.X &&
-                        ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
-                        ms.Position.Y > cells[i, j].Position.Y) {
-                        if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
-                            revealCells(i, j);
-                        }
-                        if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed) {
-                            cells[i, j].flag(); 
+                for (int i = 1; i < cells.GetLength(0)-1; i++) {
+                    for (int j = 1; j < cells.GetLength(1)-1; j++) {
+                        if (ms.Position.X < cells[i, j].Position.X + CELL_SIZE && 
+                            ms.Position.X > cells[i, j].Position.X &&
+                            ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
+                            ms.Position.Y > cells[i, j].Position.Y) {
+                            if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                                revealCells(i, j);
+                            }
+                            if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed) {
+                                cells[i, j].flag(); 
+                            }
                         }
                     }
                 }
+                if (_foundCoins == NUM_COINS) {
+                    Debug.WriteLine("du har vunnit");
+                }
+                previousMS = ms;
             }
-            previousMS = ms;
+            Debug.WriteLine(_gameTimer.ElapsedMilliseconds);
             base.Update(gameTime);
         }
 
@@ -144,6 +173,9 @@ namespace minesweeper2 {
             //om cellen man trycker på inte är tryck
             if (!cells[i, j].IsClicked) {
                 cells[i, j].click();
+                if (cells[i, j] is Coin) {
+                    _foundCoins++;
+                }
                 if (cells[i, j] is NormalCell && ((NormalCell)cells[i, j]).NearbyGrenades == 0) {
                     for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
                         for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
