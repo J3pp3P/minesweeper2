@@ -13,11 +13,7 @@ namespace minesweeper2 {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private int _screenWidth, _screenHeight, _screenCenterY, _screenCenterX;
-        private bool _firstClick = true;
-        private int _foundCoins = 0;
-        private bool _running = false;
-        private bool _started = false;
-        private bool _paused = false;
+        private bool firstClick = true;
         Random rand = new Random();
         Stopwatch _gameTimer = new Stopwatch();
 
@@ -96,13 +92,13 @@ namespace minesweeper2 {
             //Skapa 2D array med alla celler, bomber och coins, blanda sedan
             //Initiera positioner och storlek på alla celler
             loadCells(cells, NUM_GRENADES, NUM_COINS);
-            cells = shuffle(cells);
+            
 
             //Beräkna antalet bomber runt alla NormalCeller
-            cells = distanceToCoin(cells);
+            
 
             //beräkna avståndet till närmsta coin för att ge cellen en korrekt bakgrundsfärg
-            cells = countNearbyBombs(cells);
+            
 
             //
         }
@@ -144,27 +140,22 @@ namespace minesweeper2 {
 
                 MouseState ms = Mouse.GetState();
 
-                for (int i = 1; i < cells.GetLength(0)-1; i++) {
-                    for (int j = 1; j < cells.GetLength(1)-1; j++) {
-                        if (ms.Position.X < cells[i, j].Position.X + CELL_SIZE && 
-                            ms.Position.X > cells[i, j].Position.X &&
-                            ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
-                            ms.Position.Y > cells[i, j].Position.Y) {
-                            if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
-                                revealCells(i, j);
-                            }
-                            if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed) {
-                                cells[i, j].flag(); 
-                            }
+            for (int i = 1; i < cells.GetLength(0)-1; i++) {
+                for (int j = 1; j < cells.GetLength(1)-1; j++) {
+                    if (ms.Position.X < cells[i, j].Position.X + CELL_SIZE && 
+                        ms.Position.X > cells[i, j].Position.X &&
+                        ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
+                        ms.Position.Y > cells[i, j].Position.Y) {
+                        if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                            revealCells(i, j);
+                        }
+                        if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed) {
+                            cells[i, j].flag(); 
                         }
                     }
                 }
-                if (_foundCoins == NUM_COINS) {
-                    Debug.WriteLine("du har vunnit");
-                }
-                previousMS = ms;
             }
-            Debug.WriteLine(_gameTimer.ElapsedMilliseconds);
+            previousMS = ms;
             base.Update(gameTime);
         }
 
@@ -294,21 +285,58 @@ namespace minesweeper2 {
             }
             return cells;
         }
-        private Cell[,] shuffle(Cell[,] cells)
+        private Cell[,] shuffle(Cell[,] cells, int firstClickX, int firstClickY)
         {
             Cell temp;
             Vector2 tempPosition;
+            bool reroll = true;
 
             for (int i = 1; i < cells.GetLength(0)-1; i++) {
                 for (int j = 1; j < cells.GetLength(1)-1; j++) {
-                    int x = rand.Next(1, cells.GetLength(0)-1);
-                    int y = rand.Next(1, cells.GetLength(1)-1);
-                    tempPosition = cells[i, j].Position;
-                    cells[i, j].Position = cells[x, y].Position;
-                    cells[x, y].Position = tempPosition;
-                    temp = cells[i, j];
-                    cells[i, j] = cells[x, y];
-                    cells[x, y] = temp;
+                    reroll = true;
+                    while (reroll) {
+                        int x = rand.Next(1, cells.GetLength(0)-1);
+                        int y = rand.Next(1, cells.GetLength(1)-1);
+                        if (cells[i, j] is Grenade) {
+                            if (x >= firstClickX-1 && x <= firstClickX+1 && y <= firstClickY+1 && y >= firstClickY-1) {
+                                reroll = true;
+                                Debug.WriteLine("grattis du klarade det");
+                            }
+                            else {
+                                reroll = false;
+                                tempPosition = cells[i, j].Position;
+                                cells[i, j].Position = cells[x, y].Position;
+                                cells[x, y].Position = tempPosition;
+                                temp = cells[i, j];
+                                cells[i, j] = cells[x, y];
+                                cells[x, y] = temp;
+                            }
+                        }
+                        else {
+                            reroll = false;
+                            tempPosition = cells[i, j].Position;
+                            cells[i, j].Position = cells[x, y].Position;
+                            cells[x, y].Position = tempPosition;
+                            temp = cells[i, j];
+                            cells[i, j] = cells[x, y];
+                            cells[x, y] = temp;
+
+                            if (i >= firstClickX-1 && i <= firstClickX+1 && j <= firstClickY+1 && j >= firstClickY-1) {
+                                if (cells[x, y] is Grenade) {
+                                    reroll = true;
+                                }
+                                else {
+                                    reroll = false;
+                                    tempPosition = cells[i, j].Position;
+                                    cells[i, j].Position = cells[x, y].Position;
+                                    cells[x, y].Position = tempPosition;
+                                    temp = cells[i, j];
+                                    cells[i, j] = cells[x, y];
+                                    cells[x, y] = temp;
+                                }
+                            }
+                        }
+                    }
                 }
             }
             return cells;
