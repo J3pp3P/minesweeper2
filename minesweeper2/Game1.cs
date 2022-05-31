@@ -13,7 +13,9 @@ namespace minesweeper2 {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private int _screenWidth, _screenHeight, _screenCenterY, _screenCenterX;
-        private bool firstClick = true;
+        private bool _firstClick = true;
+        private bool _started, _paused, _running;
+        private int _foundCoins;
         Random rand = new Random();
         Stopwatch _gameTimer = new Stopwatch();
 
@@ -93,14 +95,6 @@ namespace minesweeper2 {
             //Initiera positioner och storlek på alla celler
             loadCells(cells, NUM_GRENADES, NUM_COINS);
             
-
-            //Beräkna antalet bomber runt alla NormalCeller
-            
-
-            //beräkna avståndet till närmsta coin för att ge cellen en korrekt bakgrundsfärg
-            
-
-            //
         }
 
         protected override void Update(GameTime gameTime)
@@ -140,67 +134,36 @@ namespace minesweeper2 {
 
                 MouseState ms = Mouse.GetState();
 
-            for (int i = 1; i < cells.GetLength(0)-1; i++) {
-                for (int j = 1; j < cells.GetLength(1)-1; j++) {
-                    if (ms.Position.X < cells[i, j].Position.X + CELL_SIZE && 
-                        ms.Position.X > cells[i, j].Position.X &&
-                        ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
-                        ms.Position.Y > cells[i, j].Position.Y) {
-                        if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
-                            revealCells(i, j);
-                        }
-                        if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed) {
-                            cells[i, j].flag(); 
-                        }
-                    }
-                }
-            }
-            previousMS = ms;
-            base.Update(gameTime);
-        }
-
-        private void revealCells(int i, int j)
-        {
-            //om cellen man trycker på inte är tryck
-            if (!cells[i, j].IsClicked) {
-                cells[i, j].click();
-                if (cells[i, j] is Coin) {
-                    _foundCoins++;
-                }
-                if (cells[i, j] is NormalCell && ((NormalCell)cells[i, j]).NearbyGrenades == 0) {
-                    for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
-                        for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
-                            if (!cells[x, y].IsClicked) {
-                                revealCells(x, y);
+                for (int i = 1; i < cells.GetLength(0)-1; i++) {
+                    for (int j = 1; j < cells.GetLength(1)-1; j++) {
+                        if (ms.Position.X < cells[i, j].Position.X + CELL_SIZE &&
+                            ms.Position.X > cells[i, j].Position.X &&
+                            ms.Position.Y < cells[i, j].Position.Y + CELL_SIZE &&
+                            ms.Position.Y > cells[i, j].Position.Y) {
+                            if (_firstClick && ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                                _firstClick = false;
+                                cells = shuffle(cells, i, j);
+                                cells = distanceToCoin(cells);
+                                cells = countNearbyBombs(cells);
+                                revealCells(i, j);
                             }
-                        }
-                    }
-                }
-            }
-            else {
-                //om cellen man trycker på är tryck går man igenom antalet flaggor runt är det samma som 
-                //siffran i cellen trycks alla celler runt den tryckta cellen
-                int nearbyFlaggedCells = 0;
-                if (cells[i, j] is NormalCell) {
-                    for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
-                        for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
-                            if (cells[x, y].Flagged) {
-                                nearbyFlaggedCells++;
-                            }
-                        }
-                    }
-                    if (nearbyFlaggedCells == ((NormalCell)cells[i, j]).NearbyGrenades) {
-                        for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
-                            for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
-                                if (!cells[x, y].IsClicked) {
-                                    revealCells(x, y);
+                            else {
+                                if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                                    revealCells(i, j);
+                                }
+                                if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed) {
+                                    cells[i, j].flag();
                                 }
                             }
                         }
                     }
                 }
+                previousMS = ms;
+                base.Update(gameTime);
             }
         }
+
+        
 
         protected override void Draw(GameTime gameTime)
         {
@@ -259,6 +222,48 @@ namespace minesweeper2 {
             _spriteBatch.End();
             base.Draw(gameTime);
         }
+        private void revealCells(int i, int j)
+        {
+            //om cellen man trycker på inte är tryck
+            if (!cells[i, j].IsClicked) {
+                cells[i, j].click();
+                if (cells[i, j] is Coin) {
+                    _foundCoins++;
+                }
+                if (cells[i, j] is NormalCell && ((NormalCell)cells[i, j]).NearbyGrenades == 0) {
+                    for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
+                        for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
+                            if (!cells[x, y].IsClicked) {
+                                revealCells(x, y);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                //om cellen man trycker på är tryck går man igenom antalet flaggor runt är det samma som 
+                //siffran i cellen trycks alla celler runt den tryckta cellen
+                int nearbyFlaggedCells = 0;
+                if (cells[i, j] is NormalCell) {
+                    for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
+                        for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
+                            if (cells[x, y].Flagged) {
+                                nearbyFlaggedCells++;
+                            }
+                        }
+                    }
+                    if (nearbyFlaggedCells == ((NormalCell)cells[i, j]).NearbyGrenades) {
+                        for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
+                            for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
+                                if (!cells[x, y].IsClicked) {
+                                    revealCells(x, y);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         private Cell[,] loadCells(Cell[,] cells, int numGrenades, int numCoins)
         {
             for (int i = 0; i < cells.GetLength(0); i++) {
@@ -287,59 +292,72 @@ namespace minesweeper2 {
         }
         private Cell[,] shuffle(Cell[,] cells, int firstClickX, int firstClickY)
         {
-            Cell temp;
-            Vector2 tempPosition;
             bool reroll = true;
-
             for (int i = 1; i < cells.GetLength(0)-1; i++) {
                 for (int j = 1; j < cells.GetLength(1)-1; j++) {
                     reroll = true;
                     while (reroll) {
                         int x = rand.Next(1, cells.GetLength(0)-1);
                         int y = rand.Next(1, cells.GetLength(1)-1);
+                        /*om forloopens cell är en bomb får den inte flyttas in i 3x3 rutan runt första tryckets position
+                         * men bomben måste flyttas ut ur 3x3 rutan om i och j är innanför 3x3 rutan, 
+                         * då måste man se till att den byts mot en cell som inte är en bomb
+                         */
                         if (cells[i, j] is Grenade) {
-                            if (x >= firstClickX-1 && x <= firstClickX+1 && y <= firstClickY+1 && y >= firstClickY-1) {
-                                reroll = true;
-                                Debug.WriteLine("grattis du klarade det");
+
+                            if (i >= firstClickX-1 && i <= firstClickX+1 && j <= firstClickY+1 && j >= firstClickY-1) {
+                                if (x >= firstClickX-1 && x <= firstClickX+1 && y <= firstClickY+1 && y >= firstClickY-1) {
+                                    reroll = true;
+                                }
+                                else if (cells[x, y] is Grenade) {
+                                    reroll = true;
+                                }
+                                else {
+                                    reroll = false;
+                                    swap(i, j, x, y);
+                                }
                             }
                             else {
-                                reroll = false;
-                                tempPosition = cells[i, j].Position;
-                                cells[i, j].Position = cells[x, y].Position;
-                                cells[x, y].Position = tempPosition;
-                                temp = cells[i, j];
-                                cells[i, j] = cells[x, y];
-                                cells[x, y] = temp;
+                                if (x >= firstClickX-1 && x <= firstClickX+1 && y <= firstClickY+1 && y >= firstClickY-1) {
+                                    reroll = true;
+                                }
+                                else {
+                                    reroll = false;
+                                    swap(i, j, x, y);
+                                }
                             }
                         }
                         else {
-                            reroll = false;
-                            tempPosition = cells[i, j].Position;
-                            cells[i, j].Position = cells[x, y].Position;
-                            cells[x, y].Position = tempPosition;
-                            temp = cells[i, j];
-                            cells[i, j] = cells[x, y];
-                            cells[x, y] = temp;
-
                             if (i >= firstClickX-1 && i <= firstClickX+1 && j <= firstClickY+1 && j >= firstClickY-1) {
                                 if (cells[x, y] is Grenade) {
                                     reroll = true;
                                 }
                                 else {
                                     reroll = false;
-                                    tempPosition = cells[i, j].Position;
-                                    cells[i, j].Position = cells[x, y].Position;
-                                    cells[x, y].Position = tempPosition;
-                                    temp = cells[i, j];
-                                    cells[i, j] = cells[x, y];
-                                    cells[x, y] = temp;
+                                    swap(i, j, x, y);
                                 }
+                            }
+                            else {
+                                reroll = false;
+                                swap(i, j, x, y);
                             }
                         }
                     }
                 }
             }
             return cells;
+        }
+        //byter plats på cell1 och cell2
+        private void swap(int cell1X, int cell1Y, int cell2X, int cell2Y)
+        {
+            Cell temp;
+            Vector2 tempPosition;
+            tempPosition = cells[cell1X, cell1Y].Position;
+            cells[cell1X, cell1Y].Position = cells[cell2X, cell2Y].Position;
+            cells[cell2X, cell2Y].Position = tempPosition;
+            temp = cells[cell1X, cell1Y];
+            cells[cell1X, cell1Y] = cells[cell2X, cell2Y];
+            cells[cell2X, cell2Y] = temp;
         }
         private Cell[,] countNearbyBombs(Cell[,] cells)
         {
@@ -409,39 +427,5 @@ namespace minesweeper2 {
             }
             return cells;
         }
-
-        
-
-
-        /*private Cell[,] clearSpaceFirstClick(Cell[,] cells, int x, int y)
-        {
-            Cell temp;
-            Vector2 tempPosition;
-            bool reroll = true;
-            for (int i = x-1; i < x+1; i++) {
-                for (int j = y-1; j < y+1; j++) {
-                    if (cells[i, j] is Grenade) {
-                        reroll = true;
-                        while (reroll) {
-                            int newX = rand.Next(1, cells.GetLength(0)-1);
-                            int newY = rand.Next(1, cells.GetLength(1)-1);
-                            if (newX >= x-1 && newX <= x+1 && newY >= y-1 && newY <= y+1) {
-                                reroll = true;
-                            }
-                            else {
-                                reroll = false;
-                            }
-                        }
-                        tempPosition = cells[i, j].Position;
-                        cells[i, j].Position = cells[x, y].Position;
-                        cells[x, y].Position = tempPosition;
-                        temp = cells[i, j];
-                        cells[i, j] = cells[x, y];
-                        cells[x, y] = temp;
-                    }
-                }
-            }
-            return cells;
-        }*/
     }
 }
