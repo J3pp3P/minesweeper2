@@ -298,18 +298,28 @@ namespace minesweeper2 {
                                 cells[x, y] = temp;
                             }
                         }
-                        else if (i >= firstClickX-1 && i <= firstClickX+1 && j <= firstClickY+1 && j >= firstClickY-1) {
-                            if (cells[x, y] is Grenade) {
-                                reroll = true;
-                            }
-                            else {
-                                reroll = false;
-                                tempPosition = cells[i, j].Position;
-                                cells[i, j].Position = cells[x, y].Position;
-                                cells[x, y].Position = tempPosition;
-                                temp = cells[i, j];
-                                cells[i, j] = cells[x, y];
-                                cells[x, y] = temp;
+                        else {
+                            reroll = false;
+                            tempPosition = cells[i, j].Position;
+                            cells[i, j].Position = cells[x, y].Position;
+                            cells[x, y].Position = tempPosition;
+                            temp = cells[i, j];
+                            cells[i, j] = cells[x, y];
+                            cells[x, y] = temp;
+
+                            if (i >= firstClickX-1 && i <= firstClickX+1 && j <= firstClickY+1 && j >= firstClickY-1) {
+                                if (cells[x, y] is Grenade) {
+                                    reroll = true;
+                                }
+                                else {
+                                    reroll = false;
+                                    tempPosition = cells[i, j].Position;
+                                    cells[i, j].Position = cells[x, y].Position;
+                                    cells[x, y].Position = tempPosition;
+                                    temp = cells[i, j];
+                                    cells[i, j] = cells[x, y];
+                                    cells[x, y] = temp;
+                                }
                             }
                         }
                     }
