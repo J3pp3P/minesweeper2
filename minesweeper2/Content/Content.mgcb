@@ -121,6 +121,13 @@
 /processorParam:TextureFormat=Color
 /build:Bomb.png
 
+#begin bombsLeft.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:bombsLeft.spritefont
+
 #begin cell.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -132,6 +139,20 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:cell.png
+
+#begin coinsLeft.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:coinsLeft.spritefont
+
+#begin continue.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:continue.spritefont
 
 #begin flag.png
 /importer:TextureImporter
@@ -145,6 +166,27 @@
 /processorParam:TextureFormat=Color
 /build:flag.png
 
+#begin highscore.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:highscore.spritefont
+
+#begin play.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:play.spritefont
+
+#begin restart.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:restart.spritefont
+
 #begin sosse.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -156,4 +198,11 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:sosse.png
+
+#begin time.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:time.spritefont
 
