@@ -2,7 +2,11 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace minesweeper2 {
     /*
@@ -16,22 +20,23 @@ namespace minesweeper2 {
         private SpriteFont _coinsLeft;
         private SpriteFont _bombsLeft;
         private SpriteFont _restart;
-        private SpriteFont _highscore;
+        private SpriteFont _highscoreFont;
         private Texture2D _joakimVonAnka;
         private Texture2D _bigBomb;
         private Vector2 _bigBombPosition;
         private Vector2 _joakimVonAnkaPosition;
-        private Vector2 _highscorePosition;
+        private Vector2 _highscoreTitlePosition;
         private Vector2 _restartPosition;
         private Rectangle _restartRectangle;
         private Rectangle _highscoreRectangle;
-        private int _screenWidth, _screenHeight, _screenCenterY, _screenCenterX;
+        private int _screenWidth, _screenHeight;
         private bool _firstClick = true;
         private bool _gameOver = false;
         private bool _victory = false;
         private bool _running = true;
         private int _foundCoins;
         private int _foundBombs;
+        private string _username = "Greger";
         Random rand = new Random();
         Stopwatch _gameTimer = new Stopwatch();
         string _time = "0";
@@ -44,8 +49,18 @@ namespace minesweeper2 {
         private const int BOARD_SIZE_WIDTH = 16;
         private const int BOARD_SIZE_HEIGHT = 16;
         private MouseState previousMS;
+
+        //highscore content
+        private Vector2[] _highscorePositions = new Vector2[10];
+        private String[] _highscores = new string[0];
+
+        //server stuff
+        private TcpClient _clientSocket = new TcpClient();
+        private NetworkStream _serverStream = default(NetworkStream);
+
         //+2 för att ha en border runt banan,  gör det lättare kolla antalet bomber
         private Cell[,] cells = new Cell[BOARD_SIZE_HEIGHT + 2, BOARD_SIZE_WIDTH + 2];
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -60,32 +75,40 @@ namespace minesweeper2 {
             _graphics.ApplyChanges();
             _screenWidth = GraphicsDevice.Viewport.Width;
             _screenHeight = GraphicsDevice.Viewport.Height;
-            _screenCenterX = _screenWidth / 2;
-            _screenCenterY = _screenHeight / 2;
+            //_screenCenterX = _screenWidth / 2;
+            //_screenCenterY = _screenHeight / 2;
 
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
+            requestHighscore();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             _joakimVonAnka = Content.Load<Texture2D>("joakim_von_anka");
             _bigBomb = Content.Load<Texture2D>("bigBomb");
             _timeFont = Content.Load<SpriteFont>("time");
             _coinsLeft = Content.Load<SpriteFont>("coinsLeft");
             _bombsLeft = Content.Load<SpriteFont>("bombsLeft");
-            _highscore = Content.Load<SpriteFont>("highscore");
+            _highscoreFont = Content.Load<SpriteFont>("highscore");
             _restart = Content.Load<SpriteFont>("restart");
 
             _bigBombPosition = new Vector2(300, 300);
             _joakimVonAnkaPosition = new Vector2(300, 300);
-            _highscorePosition = new Vector2(_screenWidth-300, 400);
+            _highscoreTitlePosition = new Vector2(_screenWidth-300, 400);
             _restartPosition = new Vector2(_screenWidth-300, 300);
             _restartRectangle = new Rectangle(_screenWidth-300, 300, (int)_restart.MeasureString("Restart").X, (int)_restart.MeasureString("Restart").Y);
             _highscoreRectangle = new Rectangle(_screenWidth-300, 300, (int)_restart.MeasureString("Highscore").X, (int)_restart.MeasureString("Highscore").Y);
 
             //load cells
             loadCells(cells, NUM_GRENADES, NUM_COINS);
+
+            //highscores
+            int scoreHeight = (int)_highscoreTitlePosition.Y + 30;
+            for (int i = 0; i < _highscorePositions.Length; i++) {
+                _highscorePositions[i] = new Vector2(_screenWidth-300, scoreHeight);
+                scoreHeight += 30;
+            }
             
         }
 
@@ -114,6 +137,7 @@ namespace minesweeper2 {
 
             //reset
             if (_restartRectangle.Contains(ms.Position) && ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                requestHighscore();
                 _running = true;
                 _firstClick = true;
                 _victory = false;
@@ -167,12 +191,16 @@ namespace minesweeper2 {
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             _spriteBatch.Begin();
+            //TODO: ta bort dessa vectorer
             _spriteBatch.DrawString(_timeFont, "Time: " + _time, new Vector2(_screenWidth -300, 50), Color.Black);
             _spriteBatch.DrawString(_coinsLeft, "Coins: " + _foundCoins + " / " + NUM_COINS, new Vector2(_screenWidth -300, 100), Color.Black);
             _spriteBatch.DrawString(_bombsLeft, "Bombs: " + _foundBombs + " / " + NUM_GRENADES, new Vector2(_screenWidth -300, 150), Color.Black);
             _spriteBatch.DrawString(_restart, "Restart", _restartPosition, Color.Black);
-            _spriteBatch.DrawString(_highscore, "Highscore", _highscorePosition, Color.Black);
-
+            _spriteBatch.DrawString(_highscoreFont, "Highscore", _highscoreTitlePosition, Color.Black);
+            for (int i = 0; i < Math.Min(_highscores.Length-1, 10); i++) {
+                int index = i + 1;
+                _spriteBatch.DrawString(_highscoreFont, index + ": " + _highscores[i], _highscorePositions[i], Color.Black);
+            }
 
             for (int i = 1; i < cells.GetLength(0)-1; i++) {
                 for (int j = 1; j < cells.GetLength(1)-1; j++) {
@@ -240,6 +268,7 @@ namespace minesweeper2 {
                     if (_foundCoins == NUM_COINS) {
                         _running = false;
                         _victory = true;
+                        submitHighscore();
                         _gameTimer.Stop();
                         return;
                     }
@@ -445,6 +474,33 @@ namespace minesweeper2 {
                 }
             }
             return cells;
+        }
+        private void requestHighscore()
+        {
+            _clientSocket = new TcpClient();
+            _clientSocket.Connect("127.0.0.1", 1234);
+            _serverStream = _clientSocket.GetStream();
+            byte[] request = Encoding.ASCII.GetBytes("getHighscores$endl");
+            _serverStream.Write(request, 0, request.Length);
+            Thread clientThread = new Thread(getHighscore);
+            clientThread.Start();
+        }
+        private void getHighscore()
+        {
+            _serverStream = _clientSocket.GetStream();
+            byte[] highscoreBytes = new byte[_clientSocket.ReceiveBufferSize];
+            _serverStream.Read(highscoreBytes, 0, _clientSocket.ReceiveBufferSize);
+            string highScoreString = Encoding.ASCII.GetString(highscoreBytes);
+            Debug.WriteLine(highScoreString);
+            _highscores = highScoreString.Split("\r\n");
+        }
+        private void submitHighscore()
+        {
+            _clientSocket = new TcpClient();
+            _clientSocket.Connect("127.0.0.1", 1234);
+            _serverStream = _clientSocket.GetStream();
+            byte[] request = Encoding.ASCII.GetBytes(_username + " " + _time + "$endl");
+            _serverStream.Write(request, 0, request.Length);
         }
     }
 }
