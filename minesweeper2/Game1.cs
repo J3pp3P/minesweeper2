@@ -128,7 +128,7 @@ namespace minesweeper2 {
                         ms.Position.Y > cells[i, j].Position.Y) {
                         if (_firstClick && ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
                             _firstClick = false;
-                            cells = shuffle(cells, i, j);
+                            //cells = shuffle(cells, i, j);
                             cells = distanceToCoin(cells);
                             cells = countNearbyBombs(cells);
                             revealCells(i, j);
@@ -284,18 +284,35 @@ namespace minesweeper2 {
                         int x = rand.Next(1, cells.GetLength(0)-1);
                         int y = rand.Next(1, cells.GetLength(1)-1);
                         if (cells[i, j] is Grenade) {
-                            if (x >= firstClickX-1 && x <= firstClickX+1 && y <= firstClickY+1 && y >= firstClickY-1) {
-                                reroll = true;
-                                Debug.WriteLine("grattis du klarade det");
+                            if (i >= firstClickX-1 && i <= firstClickX+1 && j <= firstClickY+1 && j >= firstClickY-1) {
+                                if (x >= firstClickX-1 && x <= firstClickX+1 && y <= firstClickY+1 && y >= firstClickY-1) {
+                                    reroll = true;
+                                    Debug.WriteLine("grattis du klarade det");
+                                }
+                                else {
+                                    reroll = false;
+                                    tempPosition = cells[i, j].Position;
+                                    cells[i, j].Position = cells[x, y].Position;
+                                    cells[x, y].Position = tempPosition;
+                                    temp = cells[i, j];
+                                    cells[i, j] = cells[x, y];
+                                    cells[x, y] = temp;
+                                }
                             }
                             else {
-                                reroll = false;
-                                tempPosition = cells[i, j].Position;
-                                cells[i, j].Position = cells[x, y].Position;
-                                cells[x, y].Position = tempPosition;
-                                temp = cells[i, j];
-                                cells[i, j] = cells[x, y];
-                                cells[x, y] = temp;
+                                if (!(x >= firstClickX-1 && x <= firstClickX+1 && y <= firstClickY+1 && y >= firstClickY-1)) {
+
+                                    reroll = false;
+                                    tempPosition = cells[i, j].Position;
+                                    cells[i, j].Position = cells[x, y].Position;
+                                    cells[x, y].Position = tempPosition;
+                                    temp = cells[i, j];
+                                    cells[i, j] = cells[x, y];
+                                    cells[x, y] = temp;
+                                }
+                                else {
+                                    reroll = true;
+                                }
                             }
                         }
                         else {
