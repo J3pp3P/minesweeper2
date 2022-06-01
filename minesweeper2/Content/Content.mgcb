@@ -109,6 +109,18 @@
 /processorParam:TextureFormat=Color
 /build:8.png
 
+#begin bigBomb.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:bigBomb.png
+
 #begin Bomb.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -147,13 +159,6 @@
 /processorParam:TextureFormat=Compressed
 /build:coinsLeft.spritefont
 
-#begin continue.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:continue.spritefont
-
 #begin flag.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -173,21 +178,7 @@
 /processorParam:TextureFormat=Compressed
 /build:highscore.spritefont
 
-#begin play.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:play.spritefont
-
-#begin restart.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:restart.spritefont
-
-#begin sosse.png
+#begin joakim_von_anka.gif
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -197,7 +188,14 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:sosse.png
+/build:joakim_von_anka.gif
+
+#begin restart.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:restart.spritefont
 
 #begin time.spritefont
 /importer:FontDescriptionImporter

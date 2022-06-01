@@ -17,14 +17,18 @@ namespace minesweeper2 {
         private SpriteFont _bombsLeft;
         private SpriteFont _restart;
         private SpriteFont _highscore;
+        private Texture2D _joakimVonAnka;
+        private Texture2D _bigBomb;
+        private Vector2 _bigBombPosition;
+        private Vector2 _joakimVonAnkaPosition;
         private Vector2 _highscorePosition;
         private Vector2 _restartPosition;
         private Rectangle _restartRectangle;
         private Rectangle _highscoreRectangle;
         private int _screenWidth, _screenHeight, _screenCenterY, _screenCenterX;
         private bool _firstClick = true;
-        private bool _started = false;
-        private bool _paused = false;
+        private bool _gameOver = false;
+        private bool _victory = false;
         private bool _running = true;
         private int _foundCoins;
         private int _foundBombs;
@@ -36,7 +40,7 @@ namespace minesweeper2 {
         private const int GAME_HEIGHT = 900;
         private const int CELL_SIZE = 48;
         private const int NUM_GRENADES = 40;
-        private const int NUM_COINS = 2;
+        private const int NUM_COINS = 15;
         private const int BOARD_SIZE_WIDTH = 16;
         private const int BOARD_SIZE_HEIGHT = 16;
         private MouseState previousMS;
@@ -65,12 +69,16 @@ namespace minesweeper2 {
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            _joakimVonAnka = Content.Load<Texture2D>("joakim_von_anka");
+            _bigBomb = Content.Load<Texture2D>("bigBomb");
             _timeFont = Content.Load<SpriteFont>("time");
             _coinsLeft = Content.Load<SpriteFont>("coinsLeft");
             _bombsLeft = Content.Load<SpriteFont>("bombsLeft");
             _highscore = Content.Load<SpriteFont>("highscore");
             _restart = Content.Load<SpriteFont>("restart");
-            
+
+            _bigBombPosition = new Vector2(300, 300);
+            _joakimVonAnkaPosition = new Vector2(300, 300);
             _highscorePosition = new Vector2(_screenWidth-300, 400);
             _restartPosition = new Vector2(_screenWidth-300, 300);
             _restartRectangle = new Rectangle(_screenWidth-300, 300, (int)_restart.MeasureString("Restart").X, (int)_restart.MeasureString("Restart").Y);
@@ -108,6 +116,8 @@ namespace minesweeper2 {
             if (_restartRectangle.Contains(ms.Position) && ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
                 _running = true;
                 _firstClick = true;
+                _victory = false;
+                _gameOver = false;
                 _gameTimer.Restart();
                 _gameTimer.Stop();
                 _foundCoins = 0;
@@ -115,6 +125,7 @@ namespace minesweeper2 {
                 cells = new Cell[BOARD_SIZE_HEIGHT + 2, BOARD_SIZE_WIDTH + 2];
                 loadCells(cells, NUM_GRENADES, NUM_COINS);
             }
+
             if (_running) {
                 for (int i = 1; i < cells.GetLength(0)-1; i++) {
                     for (int j = 1; j < cells.GetLength(1)-1; j++) {
@@ -124,8 +135,8 @@ namespace minesweeper2 {
                                 cells = shuffle(cells, i, j);
                                 cells = distanceToCoin(cells);
                                 cells = countNearbyBombs(cells);
-                                revealCells(i, j);
                                 _gameTimer.Start();
+                                revealCells(i, j);
                             }
                             else {
                                 if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
@@ -208,7 +219,13 @@ namespace minesweeper2 {
                         }
                     }
                 }
-            } 
+            }
+            if (_victory) {
+                _spriteBatch.Draw(_joakimVonAnka, _joakimVonAnkaPosition, Color.White);
+            }
+            if (_gameOver) {
+                _spriteBatch.Draw(_bigBomb, _bigBombPosition, Color.White);
+            }
             // TODO: måla ut massa grejer
             _spriteBatch.End();
             base.Draw(gameTime);
@@ -222,11 +239,13 @@ namespace minesweeper2 {
                     _foundCoins++;
                     if (_foundCoins == NUM_COINS) {
                         _running = false;
+                        _victory = true;
                         _gameTimer.Stop();
                         return;
                     }
                 }else if(cells[i, j] is Grenade) {
                     _running = false;
+                    _gameOver = true;
                     _gameTimer.Stop();
                     return;
                 }
