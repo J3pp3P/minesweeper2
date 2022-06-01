@@ -19,11 +19,8 @@ namespace minesweeper2 {
             _coinDistance = 0;
             _nearbyGrenades = 0;
         }
-        /*public void setNumber(int num, Game game)
-        {
-            
-        }*/
 
+        //Metod för att beräkna avståndet till alla normalCells
         public int coinDistance(int coinX, int coinY, int cellSize)
         {
             int tileX = (int)_position.X / cellSize;

@@ -13,7 +13,7 @@ namespace minesweeper2 {
         }
         /*TODO: Coin klass
          * fel i planering ska vara int
-         * Metod för att beräkna avståndet till alla normalCells
+         * 
          * returnerar en double
          */
         
