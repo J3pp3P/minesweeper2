@@ -57,6 +57,8 @@ namespace minesweeper2 {
         //server stuff
         private TcpClient _clientSocket = new TcpClient();
         private NetworkStream _serverStream = default(NetworkStream);
+        private const string IP_ADDRESS = "10.89.128.172";
+        private const int PORT_NUMBER = 1234;
 
         //+2 för att ha en border runt banan,  gör det lättare kolla antalet bomber
         private Cell[,] cells = new Cell[BOARD_SIZE_HEIGHT + 2, BOARD_SIZE_WIDTH + 2];
@@ -478,7 +480,7 @@ namespace minesweeper2 {
         private void requestHighscore()
         {
             _clientSocket = new TcpClient();
-            _clientSocket.Connect("10.89.128.172", 1234);
+            _clientSocket.Connect(IP_ADDRESS, PORT_NUMBER);
             _serverStream = _clientSocket.GetStream();
             byte[] request = Encoding.ASCII.GetBytes("getHighscores$endl");
             _serverStream.Write(request, 0, request.Length);
@@ -497,7 +499,7 @@ namespace minesweeper2 {
         private void submitHighscore()
         {
             _clientSocket = new TcpClient();
-            _clientSocket.Connect("127.0.0.1", 1234);
+            _clientSocket.Connect(IP_ADDRESS, PORT_NUMBER);
             _serverStream = _clientSocket.GetStream();
             byte[] request = Encoding.ASCII.GetBytes(_username + " " + _time + "$endl");
             _serverStream.Write(request, 0, request.Length);
