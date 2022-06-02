@@ -304,7 +304,7 @@ namespace minesweeper2 {
                     if (nearbyFlaggedCells == ((NormalCell)cells[i, j]).NearbyGrenades) {
                         for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
                             for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
-                                if (!cells[x, y].IsClicked) {
+                                if (!cells[x, y].IsClicked && !cells[x, y].Flagged) {
                                     revealCells(x, y);
                                 }
                             }
