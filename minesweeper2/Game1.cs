@@ -304,7 +304,7 @@ namespace minesweeper2 {
                     if (nearbyFlaggedCells == ((NormalCell)cells[i, j]).NearbyGrenades) {
                         for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
                             for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
-                                if (!cells[x, y].IsClicked) {
+                                if (!cells[x, y].IsClicked && !cells[x, y].Flagged) {
                                     revealCells(x, y);
                                 }
                             }
@@ -478,7 +478,7 @@ namespace minesweeper2 {
         private void requestHighscore()
         {
             _clientSocket = new TcpClient();
-            _clientSocket.Connect("127.0.0.1", 1234);
+            _clientSocket.Connect("10.89.128.172", 1234);
             _serverStream = _clientSocket.GetStream();
             byte[] request = Encoding.ASCII.GetBytes("getHighscores$endl");
             _serverStream.Write(request, 0, request.Length);
