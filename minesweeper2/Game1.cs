@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -16,19 +17,20 @@ namespace minesweeper2 {
     public class Game1 : Game {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private SpriteFont _timeFont;
-        private SpriteFont _coinsLeft;
-        private SpriteFont _bombsLeft;
-        private SpriteFont _restart;
-        private SpriteFont _highscoreFont;
+        private SpriteFont _text;
         private Texture2D _joakimVonAnka;
         private Texture2D _bigBomb;
         private Vector2 _bigBombPosition;
         private Vector2 _joakimVonAnkaPosition;
         private Vector2 _highscoreTitlePosition;
-        private Vector2 _restartPosition;
+        private Vector2 _restartTextPosition;
+        private Vector2 _coinTextPosition;
+        private Vector2 _bombTextPosition;
+        private Vector2 _timeTextPosition;
+        private Vector2 _CustomizePosition;
         private Rectangle _restartRectangle;
         private Rectangle _highscoreRectangle;
+        //private TextBox _textBox;
         private int _screenWidth, _screenHeight;
         private bool _firstClick = true;
         private bool _gameOver = false;
@@ -41,8 +43,8 @@ namespace minesweeper2 {
         Stopwatch _gameTimer = new Stopwatch();
         string _time = "0";
 
-        private const int GAME_WIDTH = 1400;
-        private const int GAME_HEIGHT = 900;
+        private const int GAME_WIDTH = 1500;
+        private const int GAME_HEIGHT = 1000;
         private const int CELL_SIZE = 48;
         private const int NUM_GRENADES = 40;
         private const int NUM_COINS = 15;
@@ -57,7 +59,7 @@ namespace minesweeper2 {
         //server stuff
         private TcpClient _clientSocket = new TcpClient();
         private NetworkStream _serverStream = default(NetworkStream);
-        private const string IP_ADDRESS = "10.89.128.172";
+        private const string IP_ADDRESS = "127.0.0.1";
         private const int PORT_NUMBER = 1234;
 
         //+2 för att ha en border runt banan,  gör det lättare kolla antalet bomber
@@ -87,22 +89,24 @@ namespace minesweeper2 {
         {
             requestHighscore();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            //ladda bilder
             _joakimVonAnka = Content.Load<Texture2D>("joakim_von_anka");
             _bigBomb = Content.Load<Texture2D>("bigBomb");
-            _timeFont = Content.Load<SpriteFont>("time");
-            _coinsLeft = Content.Load<SpriteFont>("coinsLeft");
-            _bombsLeft = Content.Load<SpriteFont>("bombsLeft");
-            _highscoreFont = Content.Load<SpriteFont>("highscore");
-            _restart = Content.Load<SpriteFont>("restart");
+            //ladda text font
+            _text = Content.Load<SpriteFont>("text");
 
+            //vectorer och rektanglar
             _bigBombPosition = new Vector2(300, 300);
             _joakimVonAnkaPosition = new Vector2(300, 300);
+            _timeTextPosition = new Vector2(_screenWidth-300, 50);
+            _coinTextPosition = new Vector2(_screenWidth-300, 100);
+            _bombTextPosition = new Vector2(_screenWidth-300, 150);
+            _restartTextPosition = new Vector2(_screenWidth-300, 300);
             _highscoreTitlePosition = new Vector2(_screenWidth-300, 400);
-            _restartPosition = new Vector2(_screenWidth-300, 300);
-            _restartRectangle = new Rectangle(_screenWidth-300, 300, (int)_restart.MeasureString("Restart").X, (int)_restart.MeasureString("Restart").Y);
-            _highscoreRectangle = new Rectangle(_screenWidth-300, 300, (int)_restart.MeasureString("Highscore").X, (int)_restart.MeasureString("Highscore").Y);
+            _restartRectangle = new Rectangle(_screenWidth-300, 300, (int)_text.MeasureString("Restart").X, (int)_text.MeasureString("Restart").Y);
+            _highscoreRectangle = new Rectangle(_screenWidth-300, 300, (int)_text.MeasureString("Highscore").X, (int)_text.MeasureString("Highscore").Y);
 
-            //load cells
+            //ladda cells
             loadCells(cells, NUM_GRENADES, NUM_COINS);
 
             //highscores
@@ -116,17 +120,13 @@ namespace minesweeper2 {
 
         protected override void Update(GameTime gameTime)
         { 
+            //tangentbord och mus
             KeyboardElite.GetState();
             MouseState ms = Mouse.GetState(); 
 
-            /* TODO: click()
-             * flag()
-             * revealMultipleCells()
+            /*
              * TODO: om det är en bomb, lägg till eventull animation och att spelaren förlorar
              * TODO: om det är ett coin, lägg till eentuell animation och att spelaren vinner om alla coins är hittade
-             * TODO: tidtagning
-             * TODO: skicka tiden Till servern i formatet string
-             * TODO: håll ordning på antalet bomber och coins kvar
              */
             //tid logik
             _time = _gameTimer.ElapsedMilliseconds.ToString();
@@ -153,9 +153,11 @@ namespace minesweeper2 {
             }
 
             if (_running) {
+                //loopar igenom hela listan med celler och kollar om en cell trycks
                 for (int i = 1; i < cells.GetLength(0)-1; i++) {
                     for (int j = 1; j < cells.GetLength(1)-1; j++) {
                         if (cells[i, j].getRetangle().Contains(ms.Position)) {
+                            //första celltrycket
                             if (_firstClick && ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
                                 _firstClick = false;
                                 cells = shuffle(cells, i, j);
@@ -164,10 +166,12 @@ namespace minesweeper2 {
                                 _gameTimer.Start();
                                 revealCells(i, j);
                             }
+                            //celltryck
                             else {
                                 if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
                                     revealCells(i, j);
                                 }
+                                //flagga
                                 if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed && !_firstClick) {
                                     if(cells[i, j].flag()) {
                                         if (cells[i, j].Flagged) {
@@ -183,8 +187,15 @@ namespace minesweeper2 {
                     }
                 }
             }
+            for (int i = 1; i < cells.GetLength(0)-1; i++) {
+                for (int j = 1; j < cells.GetLength(1)-1; j++) {
+                    if (cells[i, j] is Coin) {
+                        ((Coin)cells[i, j]).Update();
+                    }
+                }
+            }
             previousMS = ms;
-            base.Update(gameTime);
+                    base.Update(gameTime);
         }
 
 
@@ -193,15 +204,16 @@ namespace minesweeper2 {
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             _spriteBatch.Begin();
-            //TODO: ta bort dessa vectorer
-            _spriteBatch.DrawString(_timeFont, "Time: " + _time, new Vector2(_screenWidth -300, 50), Color.Black);
-            _spriteBatch.DrawString(_coinsLeft, "Coins: " + _foundCoins + " / " + NUM_COINS, new Vector2(_screenWidth -300, 100), Color.Black);
-            _spriteBatch.DrawString(_bombsLeft, "Bombs: " + _foundBombs + " / " + NUM_GRENADES, new Vector2(_screenWidth -300, 150), Color.Black);
-            _spriteBatch.DrawString(_restart, "Restart", _restartPosition, Color.Black);
-            _spriteBatch.DrawString(_highscoreFont, "Highscore", _highscoreTitlePosition, Color.Black);
+
+            //text
+            _spriteBatch.DrawString(_text, "Time: " + _time, _timeTextPosition, Color.Black);
+            _spriteBatch.DrawString(_text, "Coins: " + _foundCoins + " / " + NUM_COINS, _coinTextPosition, Color.Black);
+            _spriteBatch.DrawString(_text, "Bombs: " + _foundBombs + " / " + NUM_GRENADES, _bombTextPosition, Color.Black);
+            _spriteBatch.DrawString(_text, "Restart", _restartTextPosition, Color.Black);
+            _spriteBatch.DrawString(_text, "Highscore", _highscoreTitlePosition, Color.Black);
             for (int i = 0; i < Math.Min(_highscores.Length-1, 10); i++) {
                 int index = i + 1;
-                _spriteBatch.DrawString(_highscoreFont, index + ": " + _highscores[i], _highscorePositions[i], Color.Black);
+                _spriteBatch.DrawString(_text, index + ": " + _highscores[i], _highscorePositions[i], Color.Black);
             }
 
             for (int i = 1; i < cells.GetLength(0)-1; i++) {
@@ -216,6 +228,7 @@ namespace minesweeper2 {
                         }
                         else {
                             _spriteBatch.Draw(cells[i, j].Texture, cells[i, j].getRetangle(), Color.Gold);
+                            _spriteBatch.Draw(((Coin)cells[i, j]).CoinTexture, cells[i, j].getRetangle(), null, Color.White, ((Coin)cells[i, j]).Rotation, ((Coin)cells[i, j]).getCenter(), SpriteEffects.None, 0f);
                             if (((NormalCell)cells[i, j]).NearbyGrenades != 0) {
                                 _spriteBatch.Draw(((Coin)cells[i, j]).NumberTexture, cells[i, j].getRetangle(), Color.White);
                             }
@@ -242,7 +255,7 @@ namespace minesweeper2 {
                             }
                         }
                         else {
-                            _spriteBatch.Draw(cells[i, j].Texture, cells[i, j].getRetangle(), ((NormalCell)cells[i, j]).Color);
+                            _spriteBatch.Draw(cells[i, j].Texture, cells[i, j].getRetangle(), ((NormalCell)cells[i, j]).CellColor);
                             if (((NormalCell)cells[i, j]).NearbyGrenades != 0) {
                                 _spriteBatch.Draw(((NormalCell)cells[i, j]).NumberTexture, cells[i, j].getRetangle(), Color.White);
                             }
@@ -250,6 +263,7 @@ namespace minesweeper2 {
                     }
                 }
             }
+            //om man vunnit/förlorat
             if (_victory) {
                 _spriteBatch.Draw(_joakimVonAnka, _joakimVonAnkaPosition, Color.White);
             }
@@ -260,6 +274,8 @@ namespace minesweeper2 {
             _spriteBatch.End();
             base.Draw(gameTime);
         }
+
+        //metod för att trycka på cellerna
         private void revealCells(int i, int j)
         {
             //om cellen man trycker på inte är tryck
@@ -281,6 +297,7 @@ namespace minesweeper2 {
                     return;
                 }
                 
+                //om cellen har 0 bomber runt ska de cellerna runt tryckas också
                 if (cells[i, j] is NormalCell && ((NormalCell)cells[i, j]).NearbyGrenades == 0) {
                     for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
                         for (int y = Math.Max(1, j-1); y <= Math.Min(cells.GetLength(0)-2, j+1); y++) {
@@ -291,9 +308,9 @@ namespace minesweeper2 {
                     }
                 }
             }
+            //om cellen man trycker på är tryck går man igenom antalet flaggor runt är det samma som 
+            //siffran i cellen trycks alla celler runt den tryckta cellen
             else {
-                //om cellen man trycker på är tryck går man igenom antalet flaggor runt är det samma som 
-                //siffran i cellen trycks alla celler runt den tryckta cellen
                 int nearbyFlaggedCells = 0;
                 if (cells[i, j] is NormalCell) {
                     for (int x = Math.Max(1, i-1); x <= Math.Min(cells.GetLength(0)-2, i+1); x++) {
@@ -315,6 +332,7 @@ namespace minesweeper2 {
                 }
             }
         }
+        //metod för att ladda in celler i början av varje nytt spel
         private Cell[,] loadCells(Cell[,] cells, int numGrenades, int numCoins)
         {
             for (int i = 0; i < cells.GetLength(0); i++) {
@@ -329,7 +347,7 @@ namespace minesweeper2 {
                             numGrenades--;
                         }
                         else if (numCoins > 0) {
-                            cells[i, j] = new Coin(this, new Vector2(0, 0), "cell", "cell", "flag");
+                            cells[i, j] = new Coin(this, new Vector2(0, 0), "cell", "cell", "flag", "coin");
                             numCoins--;
                         }
                         else {
@@ -341,6 +359,7 @@ namespace minesweeper2 {
             }
             return cells;
         }
+        //metod för att blanda alla celler
         private Cell[,] shuffle(Cell[,] cells, int firstClickX, int firstClickY)
         {
             bool reroll = true;
@@ -409,35 +428,21 @@ namespace minesweeper2 {
             cells[cell1X, cell1Y] = cells[cell2X, cell2Y];
             cells[cell2X, cell2Y] = temp;
         }
+
+        //metod för att beräkna antalet bomber runt varje NormalCell
         private Cell[,] countNearbyBombs(Cell[,] cells)
         {
             for (int i = 1; i < cells.GetLength(0)-1; i++) {
                 for (int j = 1; j < cells.GetLength(1)-1; j++) {
                     int numBombs = 0;
                     if (cells[i, j] is NormalCell) {
-                        if (cells[i-1, j] is Grenade) {
-                            numBombs++;
-                        }
-                        if (cells[i-1, j-1] is Grenade) {
-                            numBombs++;
-                        }
-                        if (cells[i-1, j+1] is Grenade) {
-                            numBombs++;
-                        }
-                        if (cells[i, j+1] is Grenade) {
-                            numBombs++;
-                        }
-                        if (cells[i, j-1] is Grenade) {
-                            numBombs++;
-                        }
-                        if (cells[i+1, j-1] is Grenade) {
-                            numBombs++;
-                        }
-                        if (cells[i+1, j] is Grenade) {
-                            numBombs++;
-                        }
-                        if (cells[i+1, j+1] is Grenade) {
-                            numBombs++;
+                        //lopar igenom cellerna runt cells[i, j]
+                        for (int x = Math.Max(1, i-1); x < Math.Min(cells.GetLength(0)-1, i+2); x++) {
+                            for (int y = Math.Max(1, j-1); y < Math.Min(cells.GetLength(1)-1, j+2); y++) {
+                                if (cells[x, y] is Grenade) {
+                                    numBombs++;
+                                }
+                            }
                         }
                         if (numBombs != 0) {
                             ((NormalCell)cells[i, j]).NearbyGrenades = numBombs;
@@ -458,16 +463,16 @@ namespace minesweeper2 {
                         for (int x = Math.Max(1, i-3); x < Math.Min(cells.GetLength(0)-1, i+4); x++) {
                             for (int y = Math.Max(1, j-3); y < Math.Min(cells.GetLength(1)-1, j+4); y++) {
                                 if (cells[x, y] is NormalCell && !(cells[x, y] is Coin)) {
-
+                                    //coindistance bestämmer vilken färg cellen ska ha
                                     int coinDistance = ((NormalCell)cells[x, y]).coinDistance(i, j, CELL_SIZE);
                                     if (coinDistance == 1) {
-                                        ((NormalCell)cells[x, y]).Color = new Color(71, 165, 38, 255);
+                                        ((NormalCell)cells[x, y]).CellColor = new Color(71, 165, 38, 255);
                                     }
                                     else if(coinDistance == 2) {
-                                        ((NormalCell)cells[x, y]).Color = new Color(78, 197, 48, 255);
+                                        ((NormalCell)cells[x, y]).CellColor = new Color(78, 197, 48, 255);
                                     }
                                     else if (coinDistance == 3) {
-                                        ((NormalCell)cells[x, y]).Color = new Color(157, 230, 133, 255);
+                                        ((NormalCell)cells[x, y]).CellColor = new Color(157, 230, 133, 255);
                                     }
                                 }
                             }
@@ -477,6 +482,7 @@ namespace minesweeper2 {
             }
             return cells;
         }
+        //metod för att hämta topplistan
         private void requestHighscore()
         {
             _clientSocket = new TcpClient();

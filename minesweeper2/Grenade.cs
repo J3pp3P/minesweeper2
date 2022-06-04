@@ -5,12 +5,14 @@ using System.Text;
 
 namespace minesweeper2 {
     class Grenade : Cell {
-        public Grenade(Game game, Vector2 position, string textureName, string coverTextureName, string flagTextureName) 
-                    : base(game, position, textureName, coverTextureName, flagTextureName)
+        public Grenade(Game game, Vector2 position, string cellTextureName, string coverTextureName, string flagTextureName) 
+                    : base(game, position, cellTextureName, coverTextureName, flagTextureName)
         {
         }
         /*TODO: grenade click
-         * protected override bool click()
+         * protected override bool click(){
+         * planen var att animera något
+         * }
          */
     }
 }

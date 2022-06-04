@@ -14,9 +14,9 @@ namespace minesweeper2 {
         private bool _isClicked;
         private bool _flagged;
 
-        public Cell(Game game, Vector2 position, string textureName, string coverTextureName, string flagTextureName)
+        public Cell(Game game, Vector2 position, string cellTextureName, string coverTextureName, string flagTextureName)
         {
-            _texture = game.Content.Load<Texture2D>(textureName);
+            _texture = game.Content.Load<Texture2D>(cellTextureName);
             _flagTexture = game.Content.Load<Texture2D>(flagTextureName);
             _coverTexture = game.Content.Load<Texture2D>(coverTextureName);
             _coverColor = Color.Gray;

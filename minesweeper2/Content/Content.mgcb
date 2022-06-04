@@ -133,13 +133,6 @@
 /processorParam:TextureFormat=Color
 /build:Bomb.png
 
-#begin bombsLeft.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:bombsLeft.spritefont
-
 #begin cell.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -152,12 +145,17 @@
 /processorParam:TextureFormat=Color
 /build:cell.png
 
-#begin coinsLeft.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
+#begin coin.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:coinsLeft.spritefont
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:coin.png
 
 #begin flag.png
 /importer:TextureImporter
@@ -171,12 +169,17 @@
 /processorParam:TextureFormat=Color
 /build:flag.png
 
-#begin highscore.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
+#begin flashingCursor.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:highscore.spritefont
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:flashingCursor.png
 
 #begin joakim_von_anka.gif
 /importer:TextureImporter
@@ -190,17 +193,22 @@
 /processorParam:TextureFormat=Color
 /build:joakim_von_anka.gif
 
-#begin restart.spritefont
+#begin text.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
-/build:restart.spritefont
+/build:text.spritefont
 
-#begin time.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
+#begin textBoxRectangle.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:time.spritefont
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textBoxRectangle.png
 
