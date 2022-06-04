@@ -8,7 +8,6 @@ namespace minesweeper2 {
 
     class Coin : NormalCell {
         private Texture2D _coinTexture;
-        private bool _moving;
         private bool _firstClick;
         private float _rotation;
         private float _speed;
@@ -22,10 +21,10 @@ namespace minesweeper2 {
             _coinTexture = game.Content.Load<Texture2D>(coinTextureName);
             _halfWidth = _coinTexture.Width / 2;
             _halfHeight = _coinTexture.Height / 2;
-            _rotation = -MathHelper.Pi / 2;
-            _moving = false;
+            _rotation = 0;
+            
             _firstClick =true;
-            _speed = 0.1f;
+            _speed = 0f;
         }
 
         public override bool click()
@@ -34,20 +33,28 @@ namespace minesweeper2 {
                 _firstClick = false;
             }
             else {
-                _moving = true;
+                _speed += 0.05f;
+                
             }
             return base.click();
         }
+
+        
+
+        
         public Vector2 getCenter()
         {
             return new Vector2(_halfWidth, _halfHeight);
         }
+        public Rectangle getRectangleFace()
+        {
+            return new Rectangle((int)_position.X + _coinTexture.Width/2, (int)_position.Y + _coinTexture.Height/2, _coinTexture.Width, _coinTexture.Height);
+        }
 
         public void Update()
         {
-            if (_moving) {
-                _rotation += _speed;
-            }
+            _rotation += _speed;
+            _speed *= 0.99f;
         }
 
         public Texture2D CoinTexture { get => _coinTexture; set => _coinTexture=value; }

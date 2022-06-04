@@ -27,7 +27,6 @@ namespace minesweeper2 {
         private Vector2 _coinTextPosition;
         private Vector2 _bombTextPosition;
         private Vector2 _timeTextPosition;
-        private Vector2 _CustomizePosition;
         private Rectangle _restartRectangle;
         private Rectangle _highscoreRectangle;
         //private TextBox _textBox;
@@ -228,7 +227,7 @@ namespace minesweeper2 {
                         }
                         else {
                             _spriteBatch.Draw(cells[i, j].Texture, cells[i, j].getRetangle(), Color.Gold);
-                            _spriteBatch.Draw(((Coin)cells[i, j]).CoinTexture, cells[i, j].getRetangle(), null, Color.White, ((Coin)cells[i, j]).Rotation, ((Coin)cells[i, j]).getCenter(), SpriteEffects.None, 0f);
+                            _spriteBatch.Draw(((Coin)cells[i, j]).CoinTexture, ((Coin)cells[i, j]).getRectangleFace(), null, Color.White, ((Coin)cells[i, j]).Rotation, ((Coin)cells[i, j]).getCenter(), SpriteEffects.None, 0f);
                             if (((NormalCell)cells[i, j]).NearbyGrenades != 0) {
                                 _spriteBatch.Draw(((Coin)cells[i, j]).NumberTexture, cells[i, j].getRetangle(), Color.White);
                             }
@@ -279,8 +278,7 @@ namespace minesweeper2 {
         private void revealCells(int i, int j)
         {
             //om cellen man trycker på inte är tryck
-            if (!cells[i, j].IsClicked && !cells[i, j].Flagged) {
-                cells[i, j].click();
+            if (cells[i, j].click() && !cells[i, j].Flagged) {
                 if (cells[i, j] is Coin) {
                     _foundCoins++;
                     if (_foundCoins == NUM_COINS) {

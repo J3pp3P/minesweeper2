@@ -56,6 +56,8 @@ namespace minesweeper2 {
             }
         }
 
+        
+
         //ånej jag råkade lägga till denna metod utan att planera detta
         public Rectangle getRetangle()
         {
