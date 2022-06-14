@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,7 @@ namespace minesweeper2 {
         private Color _coverColor;
         private bool _isClicked;
         private bool _flagged;
+        private Vector2 _velocity;
 
         public Cell(Game game, Vector2 position, string cellTextureName, string coverTextureName, string flagTextureName)
         {
@@ -70,5 +71,6 @@ namespace minesweeper2 {
         public bool Flagged { get => _flagged;}
         public bool IsClicked { get => _isClicked;}
         public Color CoverColor { get => _coverColor; set => _coverColor=value; }
+        public Vector2 Velocity { get => _velocity; set => _velocity = value; }
     }
 }
