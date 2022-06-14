@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -15,6 +15,7 @@ namespace minesweeper2 {
      * TODO: settingsgrej
      */
     public class Game1 : Game {
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private SpriteFont _text;
@@ -29,6 +30,7 @@ namespace minesweeper2 {
         private Vector2 _timeTextPosition;
         private Rectangle _restartRectangle;
         private Rectangle _highscoreRectangle;
+        //private TextBox _textBox;
         private int _screenWidth, _screenHeight;
         private bool _firstClick = true;
         private bool _gameOver = false;
@@ -36,26 +38,19 @@ namespace minesweeper2 {
         private bool _running = true;
         private int _foundCoins;
         private int _foundBombs;
-
-        //textbox grejer
-        private TextBox _allCharacterTextBox;
-        private Vector2 _allCharacterTextBoxPosition;
-        private int _length;
-
         private string _username = "Greger";
         Random rand = new Random();
         Stopwatch _gameTimer = new Stopwatch();
         string _time = "0";
-        KeyboardState _keyboardstate;
-        private MouseState _previousMS;
 
         private const int GAME_WIDTH = 1500;
         private const int GAME_HEIGHT = 1000;
         private const int CELL_SIZE = 48;
-        private const int NUM_GRENADES = 40;
+        private const int NUM_GRENADES = 20;
         private const int NUM_COINS = 15;
         private const int BOARD_SIZE_WIDTH = 16;
         private const int BOARD_SIZE_HEIGHT = 16;
+        private MouseState previousMS;
 
         //highscore content
         private Vector2[] _highscorePositions = new Vector2[10];
@@ -92,7 +87,7 @@ namespace minesweeper2 {
 
         protected override void LoadContent()
         {
-            requestHighscore();
+            //requestHighscore();
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             //ladda bilder
             _joakimVonAnka = Content.Load<Texture2D>("joakim_von_anka");
@@ -120,16 +115,13 @@ namespace minesweeper2 {
                 _highscorePositions[i] = new Vector2(_screenWidth-300, scoreHeight);
                 scoreHeight += 30;
             }
-
-            //textbox
-            _allCharacterTextBox = new TextBox(this, "textBoxRectangle", "flashingCursor", new Point(522, 524), new Point(502, 512), _allCharacterTextBoxPosition, _length, false, true, _text, string.Empty, 0.9f);
             
         }
 
         protected override void Update(GameTime gameTime)
-        {
+        { 
             //tangentbord och mus
-            _keyboardstate = KeyboardElite.GetState();
+            KeyboardElite.GetState();
             MouseState ms = Mouse.GetState(); 
 
             /*
@@ -145,13 +137,9 @@ namespace minesweeper2 {
                 _time = "0";
             }
 
-            //textboxlogik
-            //HandleInput(gameTime);
-            //_allCharacterTextBox.Update();
-
             //reset
-            if (_restartRectangle.Contains(ms.Position) && ms.LeftButton == ButtonState.Released && _previousMS.LeftButton == ButtonState.Pressed) {
-                requestHighscore();
+            if (_restartRectangle.Contains(ms.Position) && ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                //requestHighscore();
                 _running = true;
                 _firstClick = true;
                 _victory = false;
@@ -165,12 +153,26 @@ namespace minesweeper2 {
             }
 
             if (_running) {
+                foreach (Cell cell in cells) {
+                    if (cell.IsClicked && (cell is NormalCell && ((NormalCell)cell).NearbyGrenades == 0 || !(cell is NormalCell))) {
+                        if (cell.Position.Y + cell.Velocity.Y  + cell.getRetangle().Height < GAME_HEIGHT) {
+                            cell.Velocity = new Vector2(cell.Velocity.X, cell.Velocity.Y + 5f);
+                            cell.Position += cell.Velocity;
+                        } else {
+                            cell.Velocity = new Vector2(cell.Velocity.X *0.9f, cell.Velocity.Y * -0.9f);
+                        }
+
+                        if(cell.Position.X < 0 ||cell.Position.X + cell.getRetangle().Width > GAME_WIDTH) {
+                            cell.Velocity = new Vector2(-cell.Velocity.X, cell.Velocity.Y);
+                        }
+                    }
+                }
                 //loopar igenom hela listan med celler och kollar om en cell trycks
                 for (int i = 1; i < cells.GetLength(0)-1; i++) {
                     for (int j = 1; j < cells.GetLength(1)-1; j++) {
                         if (cells[i, j].getRetangle().Contains(ms.Position)) {
                             //första celltrycket
-                            if (_firstClick && ms.LeftButton == ButtonState.Released && _previousMS.LeftButton == ButtonState.Pressed) {
+                            if (_firstClick && ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
                                 _firstClick = false;
                                 cells = shuffle(cells, i, j);
                                 cells = distanceToCoin(cells);
@@ -180,11 +182,14 @@ namespace minesweeper2 {
                             }
                             //celltryck
                             else {
-                                if (ms.LeftButton == ButtonState.Released && _previousMS.LeftButton == ButtonState.Pressed) {
+                                if (ms.LeftButton == ButtonState.Released && previousMS.LeftButton == ButtonState.Pressed) {
+                                    if(cells[i,j].IsClicked && (cells[i,j] is NormalCell && ((NormalCell)cells[i,j]).NearbyGrenades == 0 || !(cells[i,j] is NormalCell))) {
+                                        cells[i, j].Velocity = new Vector2(rand.Next(-30,30), -rand.Next(60,100));
+                                    }
                                     revealCells(i, j);
                                 }
                                 //flagga
-                                if (ms.RightButton == ButtonState.Released && _previousMS.RightButton == ButtonState.Pressed && !_firstClick) {
+                                if (ms.RightButton == ButtonState.Released && previousMS.RightButton == ButtonState.Pressed && !_firstClick) {
                                     if(cells[i, j].flag()) {
                                         if (cells[i, j].Flagged) {
                                             _foundBombs++;
@@ -206,19 +211,10 @@ namespace minesweeper2 {
                     }
                 }
             }
-            _previousMS = ms;
+            previousMS = ms;
                     base.Update(gameTime);
         }
 
-        //textbox
-        protected void HandleInput(GameTime gameTime)
-        {
-            Keys[] keys = _keyboardstate.GetPressedKeys();
-            string value = String.Empty;
-
-            
-
-        }
 
 
         protected override void Draw(GameTime gameTime)
@@ -301,6 +297,7 @@ namespace minesweeper2 {
         {
             //om cellen man trycker på inte är tryck
             if (cells[i, j].click() && !cells[i, j].Flagged) {
+                cells[i, j].Velocity = new Vector2(rand.Next(-5,5), rand.Next(-5,5));
                 if (cells[i, j] is Coin) {
                     _foundCoins++;
                     if (_foundCoins == NUM_COINS) {
@@ -505,30 +502,30 @@ namespace minesweeper2 {
         //metod för att hämta topplistan
         private void requestHighscore()
         {
-            _clientSocket = new TcpClient();
+            /*_clientSocket = new TcpClient();
             _clientSocket.Connect(IP_ADDRESS, PORT_NUMBER);
             _serverStream = _clientSocket.GetStream();
             byte[] request = Encoding.ASCII.GetBytes("getHighscores$endl");
             _serverStream.Write(request, 0, request.Length);
             Thread clientThread = new Thread(getHighscore);
-            clientThread.Start();
+            clientThread.Start();*/
         }
         private void getHighscore()
         {
-            _serverStream = _clientSocket.GetStream();
+            /*_serverStream = _clientSocket.GetStream();
             byte[] highscoreBytes = new byte[_clientSocket.ReceiveBufferSize];
             _serverStream.Read(highscoreBytes, 0, _clientSocket.ReceiveBufferSize);
             string highScoreString = Encoding.ASCII.GetString(highscoreBytes);
             Debug.WriteLine(highScoreString);
-            _highscores = highScoreString.Split("\r\n");
+            _highscores = highScoreString.Split("\r\n");*/
         }
         private void submitHighscore()
         {
-            _clientSocket = new TcpClient();
-            _clientSocket.Connect(IP_ADDRESS, PORT_NUMBER);
-            _serverStream = _clientSocket.GetStream();
-            byte[] request = Encoding.ASCII.GetBytes(_username + " " + _time + "$endl");
-            _serverStream.Write(request, 0, request.Length);
+            //_clientSocket = new TcpClient();
+            //_clientSocket.Connect(IP_ADDRESS, PORT_NUMBER);
+            //_serverStream = _clientSocket.GetStream();
+            //byte[] request = Encoding.ASCII.GetBytes(_username + " " + _time + "$endl");
+            //_serverStream.Write(request, 0, request.Length);
         }
     }
 }
